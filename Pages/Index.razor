@@ -1,0 +1,125 @@
+﻿@page "/"
+@inject Note_Taking_App.Data.TableContext TableContext
+@using Note_Taking_App.Models
+@using System.Threading.Tasks
+
+
+
+
+
+
+
+<h5 class="display-6"><i class="fa-solid fa-book"></i> </h5>
+<i class="fa-solid fa-book"></i>
+
+<div class="input-group input-group-lg">
+    <span class="input-group-text" id="inputGroup-sizing-lg">Title</span>
+    <input @bind=UITitle type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-lg">
+</div>
+
+<div class="mb-3">
+    
+    <textarea @bind=UINote placeholder="write your note here ..." class="form-control" id="exampleFormControlTextarea1" rows="12"  style=""></textarea>
+</div>
+
+
+
+
+
+<button @onclick=Add type="button" class="btn btn-primary"
+        style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem; margin-top:40px; margin-bottom:10px;" >
+  Add Note
+</button>
+
+
+
+
+<p>@AddedNote </p>
+<div class="table-responsive"
+<table class="table align-middle">
+    <thead>
+        <tr>
+
+            <th scope="col">Title</th>
+            <th scope="col">Note</th>
+            
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var item in NoteList){
+        <tr>
+
+            <td><h4>@item.Item1 </h4></td>
+            <td><h6>@item.Item2</h6></td>
+            <td><button @onclick= "()=> FullData(UITitle,UINote)" type="button" class="btn btn-success">Save</button></td>
+           
+        </tr>
+        }
+
+    </tbody>
+</table>
+</div>
+
+
+
+
+@code{
+    List<(string, string)> NoteList = new List<(string, string)>();
+
+    string UITitle;
+    string UINote;
+    string AddedNote = "";
+    string savedTitle = "";
+
+
+
+
+
+    void Add()
+    {
+        if (!string.IsNullOrEmpty(UITitle) && !string.IsNullOrEmpty(UINote))
+        {
+
+            NoteList.Add((UITitle, UINote));
+            AddedNote = "Note Added";
+
+        }
+        else
+        {
+            AddedNote = "No Note to Add";
+        }
+
+        
+    }
+
+
+    //Method pour ajouter les notes dans le base de donees
+
+    public async Task FullData(string title, string note)
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(note))
+            {
+                var saveData = new TableModel
+                    {
+                        Title = title,
+                        Note = note,
+                        DateTime = DateTime.Now
+                    };
+
+                TableContext.Notes.Add(saveData);
+                await TableContext.SaveChangesAsync();
+               
+                AddedNote = "Note saved successfully";
+            }
+        }
+        catch (Exception ex)
+        {
+            AddedNote = $"Error saving note: {ex.Message}";
+        }
+    }
+
+    
+
+}

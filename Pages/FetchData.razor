@@ -1,0 +1,93 @@
+﻿@page "/fetchdata"
+@using Microsoft.EntityFrameworkCore
+@using Note_Taking_App.Models
+@using System.Threading.Tasks
+@inject Note_Taking_App.Data.TableContext TableContext
+@inject NavigationManager NavigationManager
+@inject Note_Taking_App.Services.CurrentNot currentnote
+
+<PageTitle>Table</PageTitle>
+
+@if (savedNotes != null)
+{
+    @foreach (var item in savedNotes)
+    {
+        <div class="card text-center" style="margin-bottom:10px;">
+            <div class="card-header">
+               
+            </div>
+            <div class="card-body">
+                @if(item.id == editingID)
+                {
+                    <div>
+                        <input type="text" class="form-control" @bind="editingTitle" />
+                        <textarea class="form-control" @bind="editingNote"></textarea>
+                    </div>
+                }
+                <h3 class="card-title">@item.Title</h3>
+                <p class="card-text">@item.Note</p>
+                <button type="button" class="btn btn-danger" @onclick="() =>DeleteNote(item)">Delete</button>
+                @if (item.id == editingID)
+                {
+                    <button style="margin:10px;" type="button" class="btn btn-success" @onclick="SaveEditedNote">Save</button>
+                }
+                else
+                {
+                    <button style="margin:10px;" type="button" class="btn btn-warning" @onclick="() => edit(item) ">Edit</button>
+                }
+                
+            </div>
+            <div class="card-footer text-body-secondary">
+               @item.DateTime
+            </div>
+        </div>
+    }
+
+}
+
+
+@code{
+    List<Note_Taking_App.Models.TableModel> savedNotes;
+    private int? editingID;
+    private string editingTitle;
+    private string editingNote;
+   
+
+    //Method pour lire les donnes (Read)
+    protected override async Task OnInitializedAsync(){
+        savedNotes = await TableContext.Notes.ToListAsync();
+    }
+
+    //Method pour supprimer (Delete)
+    protected async Task DeleteNote(TableModel tablemodel)
+    {
+        TableContext.Notes.Remove(tablemodel);
+        savedNotes.Remove(tablemodel);
+        await TableContext.SaveChangesAsync();
+    }
+
+    //Methid pour modifier (Update)
+    private void edit(TableModel tableModel){
+        editingID = tableModel.id;
+        editingTitle = tableModel.Title;
+        editingNote = tableModel.Note;
+       
+    }
+
+    private async Task SaveEditedNote(){
+        if (editingID != null)
+        {
+            var editedNote = savedNotes.FirstOrDefault(n => n.id == editingID);
+            if(editedNote != null)
+            {
+                editedNote.Title = editingTitle;
+                editedNote.Note = editingNote;
+                editedNote.DateTime = DateTime.Now;
+                await TableContext.SaveChangesAsync();
+                editingID = null;
+            }
+
+        }
+
+    }
+}
